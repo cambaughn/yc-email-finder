@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "YC Founder Emailer",
+  "version": "1.0",
+  "description": "Find and email YC startup founders",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "identity",
+    "identity.email",
+    "https://api.voilanorbert.com/*",
+    "https://www.googleapis.com/auth/gmail.send"
+  ],
+  "host_permissions": [
+    "https://api.voilanorbert.com/"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.workatastartup.com/companies/*"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+} 
