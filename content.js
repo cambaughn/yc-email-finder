@@ -1,53 +1,34 @@
-function initEmailButtons() {
-  console.log('Initializing email buttons...');
-  
-  let isProcessing = false;
-  
-  const observer = new MutationObserver((mutations) => {
-    if (isProcessing) return;
-    
-    for (const mutation of mutations) {
-      if (mutation.addedNodes.length) {
-        // Check if we're on a page with founders
-        const founderElements = document.querySelectorAll('.flex.flex-row .font-medium');
-        if (founderElements.length > 0) {
-          isProcessing = true;
-          addEmailButtons().finally(() => {
-            isProcessing = false;
-          });
-          break;
-        }
-      }
-    }
-  });
-
-  // Start observing the document with the configured parameters
-  observer.observe(document.body, { childList: true, subtree: true });
-  console.log('Observer started');
-  
-  // Also run once immediately in case we're already on a page with founders
-  addEmailButtons();
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 }
 
-async function addEmailButtons() {
+const debouncedAddEmailButtons = debounce(async () => {
   console.log('Adding email buttons...');
   
-  // Remove any existing email buttons first to prevent duplicates
-  document.querySelectorAll('.email-founder-container').forEach(container => {
-    container.remove();
-  });
+  // Remove ALL existing buttons first
+  const existingButtons = document.querySelectorAll('.email-founder-container');
+  existingButtons.forEach(container => container.remove());
 
   const founderElements = document.querySelectorAll('.flex.flex-row .font-medium');
   console.log('Found founder elements:', founderElements.length);
   
   for (const element of founderElements) {
-    // Skip if this element already has an email button container
-    if (element.querySelector('.email-founder-container')) {
-      console.log('Skipping founder - already has button');
+    // Skip if we've already processed this element
+    if (element.hasAttribute('data-has-email-button')) {
       continue;
     }
 
-    if (element.childNodes[0].nodeType === Node.TEXT_NODE) {
+    // Only proceed if this is actually a founder name (text node)
+    if (element.childNodes[0]?.nodeType === Node.TEXT_NODE) {
+      element.setAttribute('data-has-email-button', 'true');
       const founderName = element.childNodes[0].textContent.trim();
       const companyWebsite = document.querySelector('a[href*="/website"]')?.textContent;
       
@@ -130,7 +111,7 @@ For the last few years, I've been at Sinclair Digital working on a React applica
 
 Prior to that, I built a language education startup that helped thousands of people learn Spanish, writing the code for the mobile app and custom CMS, and also the entire curriculum!
 
-I'd love to understand more about what you're looking for and whether my skills and experience would be a good fit. I know it's crazy around the holidays, but do you have some time in the next week or two?
+I'd love to understand more about what you're looking for and whether my skills and experience would be a good fit. Do you have some time in the next week or two to chat?
 
 Best,
 Cameron Baughn
@@ -165,6 +146,52 @@ P.S. Here's my LinkedIn profile: https://www.linkedin.com/in/cambaughn/`;
       element.appendChild(container);
     }
   }
+}, 100);  // 100ms debounce
+
+function initEmailButtons() {
+  console.log('Initializing email buttons...');
+  
+  // Clear ALL existing observers
+  if (window.emailButtonObserver) {
+    window.emailButtonObserver.disconnect();
+    window.emailButtonObserver = null;
+  }
+
+  const observer = new MutationObserver((mutations, obs) => {
+    const founderElements = document.querySelectorAll('.flex.flex-row .font-medium');
+    if (founderElements.length > 0) {
+      obs.disconnect();  // Disconnect immediately
+      debouncedAddEmailButtons();
+    }
+  });
+  
+  observer.observe(document.body, { childList: true, subtree: true });
+  
+  // Handle navigation
+  const handleNavigation = () => {
+    // Remove existing buttons and data attributes
+    const existingButtons = document.querySelectorAll('.email-founder-container');
+    existingButtons.forEach(container => container.remove());
+    
+    document.querySelectorAll('[data-has-email-button]').forEach(el => {
+      el.removeAttribute('data-has-email-button');
+    });
+    
+    // Try to add buttons again
+    debouncedAddEmailButtons();
+  };
+
+  // Clear existing listener if any
+  if (window._navigationHandler) {
+    window.removeEventListener('popstate', window._navigationHandler);
+  }
+  
+  // Store new listener reference
+  window._navigationHandler = handleNavigation;
+  window.addEventListener('popstate', window._navigationHandler);
+
+  // Initial setup
+  debouncedAddEmailButtons();
 }
 
 // Start the observer
