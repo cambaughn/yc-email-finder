@@ -105,7 +105,7 @@ const debouncedAddEmailButtons = debounce(async () => {
             const firstName = founderName.split(' ')[0];
             const emailTemplate = `Hi ${firstName},
 
-I saw on the YC Work at a Startup site that you're hiring for a Frontend Engineer, and I'd like to throw my hat in the ring.
+I saw on the YC Work at a Startup site that you're hiring for a Full Stack Engineer, and I'd like to throw my hat in the ring.
 
 For the last few years, I've been at Sinclair Digital working on a React application that powers 150 local news stations and entertainment sites with tens of millions of users every month.  
 
@@ -118,7 +118,7 @@ Cameron Baughn
 
 P.S. Here's my LinkedIn profile: https://www.linkedin.com/in/cambaughn/`;
 
-            const subject = encodeURIComponent('Frontend Engineer role');
+            const subject = encodeURIComponent('Software Engineer role');
             const body = encodeURIComponent(emailTemplate);
             window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${emailData.email}&su=${subject}&body=${body}`);
             
